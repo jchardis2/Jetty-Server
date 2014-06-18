@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="JettyServer" basedir=".">
+	<property name="project.name" value="infinityappsolutions.lib" />
+	<property name="src.dir" value="src" />
+
+	<property name="build.dir" value="build" />
+	<property name="classes.dir" value="${build.dir}/classes" />
+	<property name="jar.dir" value="${build.dir}/jar" />
+	<property name="dist" location="0.0.1" />
+
+	<target name="init">
+		<!-- Create the time stamp -->
+		<tstamp />
+		<!-- Create the build directory structure used by compile -->
+		<mkdir dir="${build}" />
+	</target>
+
+	<target name="clean">
+		<exec executable="mvn">
+			<arg value="clean" />
+		</exec>
+	</target>
+
+	<target name="package" depends="clean">
+		<exec executable="mvn">
+			<arg value="package" />
+		</exec>
+	</target>
+
+	<target name="compile" depends="package">
+		<exec executable="mvn">
+			<arg value="package" />
+		</exec>
+	</target>
+	<target name="install" depends="compile">
+		<exec executable="mvn">
+			<arg value="install" />
+		</exec>
+	</target>
+</project>
