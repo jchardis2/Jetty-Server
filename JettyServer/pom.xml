@@ -6,8 +6,8 @@
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<properties>
-		<ias.ouputdir>/home/jchardis/git/InfinityAppSolutions/bin</ias.ouputdir>
-		<ias.ouputdir.lib>/home/jchardis/git/InfinityAppSolutions/bin/dependency-jars</ias.ouputdir.lib>
+		<ias.ouputdir>${user.home}/git/InfinityAppSolutions/bin</ias.ouputdir>
+		<ias.ouputdir.lib>/${user.home}/git/InfinityAppSolutions/bin/dependency-jars</ias.ouputdir.lib>
 	</properties>
 
 	<repositories>
