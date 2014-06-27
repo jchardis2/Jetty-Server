@@ -1,5 +1,6 @@
 package com.infinityappsolutions.server;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -8,7 +9,13 @@ import java.util.Properties;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.deploy.PropertiesConfigurationManager;
 import org.eclipse.jetty.deploy.providers.WebAppProvider;
+import org.eclipse.jetty.jaas.JAASLoginService;
 import org.eclipse.jetty.jmx.MBeanContainer;
+import org.eclipse.jetty.security.ConstraintSecurityHandler;
+import org.eclipse.jetty.security.DefaultIdentityService;
+import org.eclipse.jetty.security.SecurityHandler;
+import org.eclipse.jetty.security.authentication.BasicAuthenticator;
+import org.eclipse.jetty.security.jaspi.JaspiAuthenticatorFactory;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.HttpConnectionFactory;
@@ -26,17 +33,38 @@ import org.eclipse.jetty.server.handler.StatisticsHandler;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.eclipse.jetty.util.thread.ScheduledExecutorScheduler;
+import org.eclipse.jetty.webapp.WebAppContext;
 
-public class Main {
+import com.infinityappsolutions.lib.util.ConfigPropertiesUtil;
+
+public class IASServer {
+	/*
+	 * Testing
+	 */
+	SecurityHandler constraintSecurityHandler;
+
 	private static String jetty_home;
 	private static String webbapp_home;
-	private static String jetty_base;
+
+	private Server server;
 
 	public static void main(String[] args) throws Exception {
-		loadSystemProperties();
+		IASServer iasServer = new IASServer();
+		iasServer.loadSystemProperties();
+		ContextHandlerCollection contexts = iasServer.configure();
+		iasServer.fullWebAppDeployment(contexts);
+		iasServer.setLoginService(contexts);
+		iasServer.start();
+		iasServer.join();
+	}
+
+	public IASServer() {
 		QueuedThreadPool threadPool = new QueuedThreadPool();
 		threadPool.setMaxThreads(500);
-		Server server = new Server(threadPool);
+		server = new Server(threadPool);
+	}
+
+	public ContextHandlerCollection configure() throws IOException {
 		server.addBean(new ScheduledExecutorScheduler());
 		HttpConfiguration http_config = new HttpConfiguration();
 		http_config.setSecureScheme("https");
@@ -82,21 +110,7 @@ public class Main {
 				new HttpConnectionFactory(https_config));
 		sslConnector.setPort(8443);
 		server.addConnector(sslConnector);
-		DeploymentManager deployer = new DeploymentManager();
-		deployer.setContexts(contexts);
-		deployer.setContextAttribute(
-				"org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
-				".*/servlet-api-[^/]*\\.jar$");
-		WebAppProvider webapp_provider = new WebAppProvider();
-		webapp_provider.setMonitoredDirName(webbapp_home);
-		// webapp_provider.setDefaultsDescriptor(jetty_home
-		// + "/etc/webdefault.xml");
-		webapp_provider.setScanInterval(1);
-		webapp_provider.setExtractWars(false);
-		webapp_provider
-				.setConfigurationManager(new PropertiesConfigurationManager());
-		deployer.addAppProvider(webapp_provider);
-		server.addBean(deployer);
+
 		StatisticsHandler stats = new StatisticsHandler();
 		stats.setHandler(server.getHandler());
 		server.setHandler(stats);
@@ -119,19 +133,72 @@ public class Main {
 		lowResourcesMonitor.setMaxMemory(0);
 		lowResourcesMonitor.setMaxLowResourcesTime(5000);
 		server.addBean(lowResourcesMonitor);
-		// HashLoginService login = new HashLoginService();
-		// login.setName("Test Realm");
-		// login.setConfig(jetty_base + "/etc/realm.properties");
-		// login.setRefreshInterval(0);
-		// JAASLoginService jaasLoginService = new
-		// JAASLoginService("JAASRealm");
-		// jaasLoginService.setLoginModuleName("jdbc");
-		// server.addBean(jaasLoginService);
+		return contexts;
+
+	}
+
+	// public void addWebApps(ContextHandlerCollection contexts) {
+	// // WebAppContext wdWebapp = new WebAppContext();
+	// // wdWebapp.setContextPath("/webdesigner");
+	// // wdWebapp.setWar("/home/jchardis/git/IAS-WebDesigner/WebDesigner");
+	// // wdWebapp.setHandler(constraintSecurityHandler);
+	// // server.addBean(wdWebapp);
+	// }
+
+	public void setLoginService(ContextHandlerCollection contexts) {
+		JaspiAuthenticatorFactory authenticatorFactory = new JaspiAuthenticatorFactory();
+		constraintSecurityHandler = new ConstraintSecurityHandler();
+		constraintSecurityHandler.setHandler(contexts);
+		constraintSecurityHandler.setAuthenticatorFactory(authenticatorFactory);
+		constraintSecurityHandler.setAuthenticator(new BasicAuthenticator());
+		JAASLoginService ls = new JAASLoginService("jdbc");
+		ls.setLoginModuleName("jdbc");
+		DefaultIdentityService defaultIdentityService = new DefaultIdentityService();
+		ls.setIdentityService(defaultIdentityService);
+		constraintSecurityHandler.setLoginService(ls);
+		authenticatorFactory.setLoginService(ls);
+		server.setHandler(constraintSecurityHandler);
+	}
+
+	public void fullWebAppDeployment(ContextHandlerCollection contexts) {
+		// addDeployer(webbapp_home, contexts);
+		addDeployer("/home/jchardis/git/IAS-WebDesigner/", contexts);
+	}
+
+	public void addDeployer(String directory, ContextHandlerCollection contexts) {
+		DeploymentManager deployer = new DeploymentManager();
+		deployer.setContexts(contexts);
+		deployer.setContextAttribute(
+				"org.eclipse.jetty.server.webapp.ContainerIncludeJarPattern",
+				".*/servlet-api-[^/]*\\.jar$");
+		WebAppProvider webapp_provider = new WebAppProvider();
+		webapp_provider.setMonitoredDirName(directory);
+		// webapp_provider.setDefaultsDescriptor(jetty_home
+		// + "/etc/webdefault.xml");
+		webapp_provider.setScanInterval(100);
+		webapp_provider.setExtractWars(false);
+		webapp_provider
+				.setConfigurationManager(new PropertiesConfigurationManager());
+		deployer.addAppProvider(webapp_provider);
+		server.addBean(deployer);
+	}
+
+	public void setWebAppContext(WebAppContext context) {
+		server.setHandler(context);
+	}
+
+	public void start() throws Exception {
 		server.start();
+	}
+
+	public void join() throws InterruptedException {
 		server.join();
 	}
 
-	public static void loadSystemProperties() throws IOException {
+	public void loadSystemProperties() throws IOException {
+		ConfigPropertiesUtil configPropertiesUtil = new ConfigPropertiesUtil();
+		configPropertiesUtil.resolveProperties(new File("config.properties"));
+
 		FileInputStream propFile = new FileInputStream("config.properties");
 		Properties p = new Properties(System.getProperties());
 		p.load(propFile);
@@ -139,9 +206,33 @@ public class Main {
 		jetty_home = System.getProperty("jetty.home", null);
 
 		webbapp_home = System.getProperty("webapp.home", null);
-		jetty_base = System.getProperty("jetty.home", null);
 		System.out.println("WebAppHome: " + webbapp_home);
 		System.out.println("JettyHome: " + jetty_home);
 
 	}
+
+	public static String getJetty_home() {
+		return jetty_home;
+	}
+
+	public static void setJetty_home(String jetty_home) {
+		IASServer.jetty_home = jetty_home;
+	}
+
+	public static String getWebbapp_home() {
+		return webbapp_home;
+	}
+
+	public static void setWebbapp_home(String webbapp_home) {
+		IASServer.webbapp_home = webbapp_home;
+	}
+
+	public Server getServer() {
+		return server;
+	}
+
+	public void setServer(Server server) {
+		this.server = server;
+	}
+
 }

@@ -6,6 +6,8 @@
 	<version>0.0.1</version>
 	<packaging>jar</packaging>
 	<properties>
+		<jetty.version.old>9.1.0.M0</jetty.version.old>
+		<jetty.version>9.2.1.v20140609</jetty.version>
 		<ias.ouputdir>${user.home}/git/InfinityAppSolutions/bin</ias.ouputdir>
 		<ias.ouputdir.lib>/${user.home}/git/InfinityAppSolutions/bin/dependency-jars</ias.ouputdir.lib>
 	</properties>
@@ -51,7 +53,7 @@
 					<outputDirectory>${ias.ouputdir}</outputDirectory>
 					<archive>
 						<manifest>
-							<mainClass>com.infinityappsolutions.server.Main</mainClass>
+							<mainClass>com.infinityappsolutions.server.IASServer</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>dependency-jars/</classpathPrefix>
 						</manifest>
@@ -61,7 +63,7 @@
 			<plugin>
 				<groupId>org.eclipse.jetty</groupId>
 				<artifactId>jetty-maven-plugin</artifactId>
-				<version>9.1.0.M0</version>
+				<version>${jetty.version}</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -134,42 +136,57 @@
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-server</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-webapp</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-servlet</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-deploy</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-jmx</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-jaas</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-util</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.jetty</groupId>
 			<artifactId>jetty-plus</artifactId>
-			<version>9.1.0.M0</version>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-security</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.jetty</groupId>
+			<artifactId>jetty-jaspi</artifactId>
+			<version>${jetty.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.geronimo.components</groupId>
+			<artifactId>geronimo-jaspi</artifactId>
+			<version>2.0.0</version>
 		</dependency>
 		<!-- end jetty dependencies -->
 		<dependency>
