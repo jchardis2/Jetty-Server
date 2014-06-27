@@ -53,7 +53,7 @@ public class IASServer {
 		iasServer.loadSystemProperties();
 		ContextHandlerCollection contexts = iasServer.configure();
 		iasServer.fullWebAppDeployment(contexts);
-		iasServer.setLoginService(contexts);
+		// iasServer.setLoginService(contexts);
 		iasServer.start();
 		iasServer.join();
 	}
@@ -161,7 +161,7 @@ public class IASServer {
 	}
 
 	public void fullWebAppDeployment(ContextHandlerCollection contexts) {
-		// addDeployer(webbapp_home, contexts);
+		addDeployer(webbapp_home, contexts);
 		addDeployer("/home/jchardis/git/IAS-WebDesigner/", contexts);
 	}
 
